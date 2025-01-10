@@ -1,0 +1,60 @@
+level-zero (1.19.2-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Tue, 17 Dec 2024 10:01:16 +0200
+
+level-zero (1.17.42-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Sat, 07 Sep 2024 10:25:04 +0300
+
+level-zero (1.17.39-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Wed, 04 Sep 2024 22:01:12 +0300
+
+level-zero (1.17.6-1) unstable; urgency=medium
+
+  * New upstream release.
+  * control: Add libspdlog-dev to build-depends.
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Thu, 27 Jun 2024 12:25:10 +0300
+
+level-zero (1.16.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Mon, 26 Feb 2024 12:13:38 +0200
+
+level-zero (1.13.5-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Fri, 15 Sep 2023 10:52:01 +0300
+
+level-zero (1.12.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Mon, 19 Jun 2023 16:03:51 +0300
+
+level-zero (1.10.0-1) experimental; urgency=medium
+
+  * New upstream release.
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Fri, 14 Apr 2023 21:33:07 +0300
+
+level-zero (1.8.12-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Tue, 10 Jan 2023 16:24:53 +0200
+
+level-zero (1.8.8-1) unstable; urgency=medium
+
+  * Initial release. (Closes: #1025760)
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Thu, 08 Dec 2022 19:50:39 +0200
