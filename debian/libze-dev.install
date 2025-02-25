@@ -1,3 +1,8 @@
-usr/include/*
-usr/lib/*/lib*.so
-usr/lib/*/pkgconfig/*
+usr/include/level_zero/*.h
+usr/include/level_zero/layers/*.h
+usr/include/level_zero/loader/*.h
+usr/lib/*/libze_loader.so
+usr/lib/*/libze_validation_layer.so
+usr/lib/*/libze_tracing_layer.so
+usr/lib/*/pkgconfig/libze_loader.pc
+usr/lib/*/pkgconfig/level-zero.pc

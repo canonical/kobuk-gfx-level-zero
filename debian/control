@@ -1,4 +1,4 @@
-Source: level-zero
+Source: level-zero-loader
 Section: libs
 Priority: optional
 Maintainer: Timo Aaltonen <tjaalton@debian.org>
@@ -7,6 +7,7 @@ Build-Depends:
  debhelper-compat (= 13),
  cmake,
  libspdlog-dev,
+ pkg-config
 Standards-Version: 4.6.1
 Homepage: https://github.com/oneapi-src/level-zero
 Vcs-Browser: https://salsa.debian.org/debian/level-zero
