@@ -40,6 +40,8 @@ void print_loader_versions(){
 int main( int argc, char *argv[] )
 {
     bool tracing_runtime_enabled = false;
+    bool legacy_init = false;
+    bool tracing_enabled = false;
     if( argparse( argc, argv, "-null", "--enable_null_driver" ) )
     {
         putenv_safe( const_cast<char *>( "ZE_ENABLE_NULL_DRIVER=1" ) );
@@ -56,18 +58,31 @@ int main( int argc, char *argv[] )
     if( argparse( argc, argv, "-trace", "--enable_tracing_layer" ) )
     {
         putenv_safe( const_cast<char *>( "ZE_ENABLE_TRACING_LAYER=1" ) );
+        tracing_enabled = true;
     }
     if( argparse( argc, argv, "-tracerun", "--enable_tracing_layer_runtime" ) )
     {
         tracing_runtime_enabled = true;
+        tracing_enabled = true;
+    }
+    if( argparse( argc, argv, "-legacy_init", "--enable_legacy_init" ) )
+    {
+        legacy_init = true;
     }
 
     ze_result_t status;
     const ze_device_type_t type = ZE_DEVICE_TYPE_GPU;
 
+    ze_init_driver_type_desc_t driverTypeDesc = {};
+    driverTypeDesc.stype = ZE_STRUCTURE_TYPE_INIT_DRIVER_TYPE_DESC;
+    driverTypeDesc.flags = ZE_INIT_DRIVER_TYPE_FLAG_GPU;
+    driverTypeDesc.pNext = nullptr;
+
     ze_driver_handle_t pDriver = nullptr;
     ze_device_handle_t pDevice = nullptr;
-    if( init_ze() )
+    uint32_t driverCount = 0;
+    zel_tracer_handle_t tracer = nullptr;
+    if( init_ze(legacy_init, driverCount, driverTypeDesc) )
     {
 
         print_loader_versions();
@@ -81,18 +96,37 @@ int main( int argc, char *argv[] )
             }
         }
 
-        uint32_t driverCount = 0;
-        status = zeDriverGet(&driverCount, nullptr);
-        if(status != ZE_RESULT_SUCCESS) {
-            std::cout << "zeDriverGet Failed with return code: " << to_string(status) << std::endl;
-            exit(1);
+        if (tracing_enabled) {
+            zel_tracer_desc_t tracer_desc = {ZEL_STRUCTURE_TYPE_TRACER_EXP_DESC, nullptr,
+                nullptr};
+            status = zelTracerCreate(&tracer_desc, &tracer);
+            if(status != ZE_RESULT_SUCCESS) {
+                std::cout << "zelTracerCreate Failed with return code: " << to_string(status) << std::endl;
+                exit(1);
+            }
         }
 
-        std::vector<ze_driver_handle_t> drivers( driverCount );
-        status = zeDriverGet( &driverCount, drivers.data() );
-        if(status != ZE_RESULT_SUCCESS) {
-            std::cout << "zeDriverGet Failed with return code: " << to_string(status) << std::endl;
-            exit(1);
+        std::vector<ze_driver_handle_t> drivers;
+        if (legacy_init) {
+            status = zeDriverGet(&driverCount, nullptr);
+            if(status != ZE_RESULT_SUCCESS) {
+                std::cout << "zeDriverGet Failed with return code: " << to_string(status) << std::endl;
+                exit(1);
+            }
+
+            drivers.resize(driverCount);
+            status = zeDriverGet( &driverCount, drivers.data() );
+            if(status != ZE_RESULT_SUCCESS) {
+                std::cout << "zeDriverGet Failed with return code: " << to_string(status) << std::endl;
+                exit(1);
+            }
+        } else {
+            drivers.resize(driverCount);
+            status = zeInitDrivers( &driverCount, drivers.data(), &driverTypeDesc);
+            if(status != ZE_RESULT_SUCCESS) {
+                std::cout << "zeInitDrivers Failed with return code: " << to_string(status) << std::endl;
+                exit(1);
+            }
         }
 
         for( uint32_t driver = 0; driver < driverCount; ++driver )
@@ -166,6 +200,14 @@ int main( int argc, char *argv[] )
     zeCommandListDestroy(command_list);
     zeEventDestroy(event);
     zeEventPoolDestroy(event_pool);
+
+    if (tracing_enabled) {
+        status = zelTracerDestroy(tracer);
+        if(status != ZE_RESULT_SUCCESS) {
+            std::cout << "zelTracerDestroy Failed with return code: " << to_string(status) << std::endl;
+            exit(1);
+        }
+    }
 
     if (tracing_runtime_enabled) {
         std::cout << "Disable Tracing Layer after init" << std::endl;
