@@ -1,5 +1,23 @@
 # Level zero loader changelog
 
+## v1.21.1
+* Fix stype assignment in zello_world
+* Given static Loader, allocate lib context_t always as dynamic and enable delayed destroy of context
+## v1.21.0
+* Add Support for building the L0 Loader statically
+## v1.20.6
+* Add in missing header for ze_handle_t definition for DDI extension
+## v1.20.5
+* Add option to enable logging each API call
+* basic_leak_checker: add support for zeMemFreeExt
+* Fix to teardown check to avoid context use after destroy
+## v1.20.4
+* Fix stype init for property query during init
+* Fix Init error checking to check the validation layer checks
+* Extension validation fixed in the parameter validation checker
+## v1.20.3
+* Implemented basic leak checker in validation layer
+* Support for Sorting Drivers based on the devices provided
 ## v1.20.2
 * Fix to Validation Layer Param checking of Extensions for new desc types
 ## v1.20.1
