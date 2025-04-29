@@ -1,4 +1,4 @@
-Source: level-zero
+Source: level-zero-loader
 Section: libs
 Priority: optional
 Maintainer: Timo Aaltonen <tjaalton@debian.org>
