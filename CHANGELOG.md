@@ -1,5 +1,28 @@
 # Level zero loader changelog
 
+## v1.21.9
+* Fix init checks when sorting legacy drivers
+* Fix MSVC Link optimization flags
+* Fix GUID handling when sub project
+* Fix dynamic tracing support with static loader
+* Always check and update the GUID when version changes
+* Added zelCheckIsLoaderInTearDown function to check if the loader is in teardown
+## v1.21.8
+* Add flags for windows optimization during linkage.
+## v1.21.7
+* Fix handling of sysman init failure given nullptr
+* Fix driver sorting given zesInit only
+* Update default SDK install path to include Program Files
+## v1.21.6
+* Fix to pkgconfig during non build installer cmake install
+## v1.21.5
+* Check zesInit pfnInit before attempting call
+* Added build flag L0_DLL_INTEGRITY_CHECKS to enable integrity check of DLLs
+## v1.21.3
+* Fix sorting drivers missing function pointers and add multi driver ults
+* Add support for SDK installer on windows
+## v1.21.2
+* Fix driver sorting given driver failures and instrumentation
 ## v1.21.1
 * Fix stype assignment in zello_world
 * Given static Loader, allocate lib context_t always as dynamic and enable delayed destroy of context

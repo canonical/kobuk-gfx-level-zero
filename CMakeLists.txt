@@ -13,7 +13,7 @@ if(MSVC AND (MSVC_VERSION LESS 1900))
 endif()
 
 # This project follows semantic versioning (https://semver.org/)
-project(level-zero VERSION 1.21.1)
+project(level-zero VERSION 1.21.9)
 
 include(GNUInstallDirs)
 
@@ -95,8 +95,11 @@ if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /guard:cf")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DYNAMICBASE")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /DYNAMICBASE")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GL")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /GL")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_CXX_LINKER_WRAPPER_FLAG}/DYNAMICBASE")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_CXX_LINKER_WRAPPER_FLAG}/guard:cf")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_CXX_LINKER_WRAPPER_FLAG}/LTCG /INCREMENTAL:NO")
     # enable Spectre Mitigation, not supported by clang-cl
     if((NOT CMAKE_CXX_COMPILER_ID STREQUAL Clang) AND (NOT CMAKE_CXX_COMPILER_ID STREQUAL IntelLLVM))
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Qspectre")
@@ -121,14 +124,25 @@ if(NOT MSVC)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
     endif()
     if(NOT CMAKE_CXX_COMPILER_ID STREQUAL IntelLLVM)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wnon-virtual-dtor")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wnon-virtual-dtor")
     endif()
 endif()
 
 #MSVC compile flags
 if(MSVC)
-    string(REPLACE "/MDd" "/MTd" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-    string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+    IF (NOT MSVC_BUILD_L0_DYNAMIC_VCRUNTIME)
+        string(REPLACE "/MDd" "/MTd" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+        string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+    ELSE()
+        string(REPLACE "/MTd" "/MDd" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+        string(REPLACE "/MT" "/MD" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+        if(NOT (CMAKE_CXX_FLAGS_RELEASE MATCHES "/MD"))
+            set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
+        endif()
+        if(NOT (CMAKE_CXX_FLAGS_DEBUG MATCHES "/MDd"))
+            set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+        endif()
+    ENDIF()
 
     if(NOT CMAKE_CXX_COMPILER_ID STREQUAL IntelLLVM)
         # treat warnings as errors
@@ -175,6 +189,18 @@ if(USE_ASAN)
     endif()
 endif()
 
+# Enable -Werror only if not building as a subproject. For subprojects, leave
+# this up to the parent project.
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  if(CMAKE_VERSION VERSION_LESS 3.24)
+    if(NOT MSVC)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+    endif()
+  else()
+    set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
+  endif()
+endif()
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/source/wrapper/include)
 
@@ -201,24 +227,59 @@ string(SUBSTRING "${os_name}" 0 1 os_name)
 
 file(GLOB LEVEL_ZERO_API_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
 
+set(SDK_COMPONENT_STRING "level-zero-devel")
+
+if(BUILD_INSTALLER)
+    set(SDK_COMPONENT_STRING "SDK")
+endif()
+
 install(FILES ${LEVEL_ZERO_API_HEADERS}
     DESTINATION ./include/level_zero
-    COMPONENT level-zero-devel
+    COMPONENT ${SDK_COMPONENT_STRING}
 )
 
 file(GLOB LEVEL_ZERO_LAYERS_API_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/include/layers/*.h")
 
 install(FILES ${LEVEL_ZERO_LAYERS_API_HEADERS}
     DESTINATION ./include/level_zero/layers
-    COMPONENT level-zero-devel
+    COMPONENT ${SDK_COMPONENT_STRING}
 )
 
 file(GLOB LEVEL_ZERO_LOADER_API_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/include/loader/*.h")
 
 install(FILES ${LEVEL_ZERO_LOADER_API_HEADERS}
     DESTINATION ./include/level_zero/loader
-    COMPONENT level-zero-devel
+    COMPONENT ${SDK_COMPONENT_STRING}
 )
+
+set(PRODUCT_GUID_FILE "${CMAKE_CURRENT_SOURCE_DIR}/PRODUCT_GUID.txt")
+if(EXISTS "${PRODUCT_GUID_FILE}")
+    file(STRINGS "${PRODUCT_GUID_FILE}" SAVED_PRODUCT_GUID)
+    list(GET SAVED_PRODUCT_GUID 0 SAVED_PRODUCT_GUID_VERSION)
+    message(STATUS "Saved Product GUID: ${SAVED_PRODUCT_GUID_VERSION}")
+    message(STATUS "project version: ${PROJECT_VERSION}")
+    if(NOT SAVED_PRODUCT_GUID_VERSION STREQUAL "${PROJECT_VERSION}")
+
+    execute_process(
+        COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_wix_guid.py
+        OUTPUT_VARIABLE GENERATED_PRODUCT_GUID
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    file(WRITE "${PRODUCT_GUID_FILE}" "${PROJECT_VERSION}\n${GENERATED_PRODUCT_GUID}")
+    message(STATUS "Generated Product GUID: ${GENERATED_PRODUCT_GUID} for version ${PROJECT_VERSION}")
+    else()
+    string(REPLACE "\n" ";" GUID_CONTENTS "${SAVED_PRODUCT_GUID}")
+    list(GET GUID_CONTENTS 1 GENERATED_PRODUCT_GUID)
+    endif()
+else()
+    execute_process(
+    COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_wix_guid.py
+    OUTPUT_VARIABLE GENERATED_PRODUCT_GUID
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    file(WRITE "${PRODUCT_GUID_FILE}" "${PROJECT_VERSION}\n${GENERATED_PRODUCT_GUID}")
+endif()
+message(STATUS "Using Product GUID: ${GENERATED_PRODUCT_GUID} for version ${PROJECT_VERSION}")
 
 # If generators list was not define build native package for current distro
 if(NOT DEFINED CPACK_GENERATOR)
@@ -228,6 +289,30 @@ if(NOT DEFINED CPACK_GENERATOR)
 		set(CPACK_GENERATOR "RPM")
 	elseif(EXISTS "/etc/SUSE-brand" OR EXISTS "/etc/SUSE-release" OR sles_distro)
 		set(CPACK_GENERATOR "RPM")
+    elseif(BUILD_INSTALLER)
+        set(CPACK_GENERATOR "WIX")
+        set(CPACK_PACKAGE_NAME "oneAPI Level Zero")
+        set(CPACK_PACKAGE_FILE_NAME "oneAPI_Level_Zero-${PROJECT_VERSION}-win64")
+        set(CPACK_WIX_ROOT_FEATURE_TITLE "oneAPI Level Zero")
+        set(CPACK_WIX_PROGRAM_MENU_FOLDER "oneAPI Level Zero")
+
+        set(CMAKE_INSTALL_PREFIX "LevelZeroSDK/${PROJECT_VERSION}/")
+        # Add the script to the install directory
+        install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/scripts/level_zero_sdk_setup.ps1"
+            DESTINATION ./scripts
+            COMPONENT ${SDK_COMPONENT_STRING}
+        )
+
+        set(CPACK_WIX_PATCH_FILE "${CMAKE_CURRENT_SOURCE_DIR}/scripts/wix_env_installation.wxs")
+
+        # sharing GUIDs between product and upgrade codes such that side by side installation is allowed.
+        set(CPACK_WIX_PRODUCT_GUID ${GENERATED_PRODUCT_GUID})
+        set(CPACK_WIX_UPGRADE_GUID ${GENERATED_PRODUCT_GUID})
+        set(CPACK_WIX_UI_DIALOG "${CMAKE_CURRENT_SOURCE_DIR}/icons/oneapi-icon-left-aligned.png")
+        set(CPACK_WIX_UI_BANNER "${CMAKE_CURRENT_SOURCE_DIR}/icons/oneapi-icon-right-aligned.png")
+        get_cmake_property(CPACK_COMPONENTS_ALL COMPONENTS)
+        list(REMOVE_ITEM CPACK_COMPONENTS_ALL "Loader")
+        set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSES/MIT.txt")
 	else()
 		set(CPACK_GENERATOR "ZIP")
 	endif()
