@@ -46,11 +46,31 @@ namespace loader
         for( auto& drv : *loader::context->sysmanInstanceDrivers )
         %endif
         {
+            %if re.match(r"Init", obj['name']) and namespace == "zes":
+            if(drv.initStatus != ZE_RESULT_SUCCESS || drv.initSysManStatus != ZE_RESULT_SUCCESS)
+                continue;
+            %else:
             if(drv.initStatus != ZE_RESULT_SUCCESS)
                 continue;
+            %endif
+        %if re.match(r"Init", obj['name']) and namespace == "zes":
+            if (!drv.dditable.${n}.${th.get_table_name(n, tags, obj)}.${th.make_pfn_name(n, tags, obj)}) {
+                drv.initSysManStatus = ZE_RESULT_ERROR_UNINITIALIZED;
+                continue;
+            }
+        %endif
+            %if re.match(r"Init", obj['name']) and namespace == "zes":
+            drv.initSysManStatus = drv.dditable.${n}.${th.get_table_name(n, tags, obj)}.${th.make_pfn_name(n, tags, obj)}( ${", ".join(th.make_param_lines(n, tags, obj, format=["name"]))} );
+            if(drv.initSysManStatus == ZE_RESULT_SUCCESS)
+                atLeastOneDriverValid = true;
+            %else:
             drv.initStatus = drv.dditable.${n}.${th.get_table_name(n, tags, obj)}.${th.make_pfn_name(n, tags, obj)}( ${", ".join(th.make_param_lines(n, tags, obj, format=["name"]))} );
             if(drv.initStatus == ZE_RESULT_SUCCESS)
                 atLeastOneDriverValid = true;
+            %if re.match(r"Init", obj['name']) and namespace == "ze":
+            drv.legacyInitAttempted = true;
+            %endif
+            %endif
         }
 
         if(!atLeastOneDriverValid)
@@ -59,14 +79,36 @@ namespace loader
         %elif re.match(r"\w+DriverGet$", th.make_func_name(n, tags, obj)) or re.match(r"\w+InitDrivers$", th.make_func_name(n, tags, obj)):
         uint32_t total_driver_handle_count = 0;
 
+        if (!loader::context->sortingInProgress.exchange(true) && !loader::context->instrumentationEnabled) {
+            %if namespace != "zes":
+            %if not re.match(r"\w+InitDrivers$", th.make_func_name(n, tags, obj)):
+            std::call_once(loader::context->coreDriverSortOnce, []() {
+                loader::context->driverSorting(&loader::context->zeDrivers, nullptr, false);
+            });
+            %else:
+            std::call_once(loader::context->coreDriverSortOnce, [desc]() {
+                loader::context->driverSorting(&loader::context->zeDrivers, desc, false);
+            });
+            %endif
+            %else:
+            std::call_once(loader::context->sysmanDriverSortOnce, []() {
+                loader::context->driverSorting(loader::context->sysmanInstanceDrivers, nullptr, true);
+            });
+            %endif
+            loader::context->sortingInProgress.store(false);
+        }
+
         %if namespace != "zes":
         for( auto& drv : loader::context->zeDrivers )
         %else:
         for( auto& drv : *loader::context->sysmanInstanceDrivers )
         %endif
         {
-            %if not re.match(r"\w+InitDrivers$", th.make_func_name(n, tags, obj)):
+            %if not (re.match(r"\w+InitDrivers$", th.make_func_name(n, tags, obj))) and namespace != "zes":
             if(drv.initStatus != ZE_RESULT_SUCCESS)
+                continue;
+            %elif namespace == "zes":
+            if(drv.initStatus != ZE_RESULT_SUCCESS || drv.initSysManStatus != ZE_RESULT_SUCCESS)
                 continue;
             %else:
             if (!drv.dditable.${n}.${th.get_table_name(n, tags, obj)}.${th.make_pfn_name(n, tags, obj)}) {

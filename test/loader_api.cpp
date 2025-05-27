@@ -10,6 +10,7 @@
 
 #include "loader/ze_loader.h"
 #include "ze_api.h"
+#include "zes_api.h"
 
 #if defined(_WIN32)
     #define putenv_safe _putenv
@@ -249,6 +250,119 @@ TEST(
   EXPECT_GT(pInitDriversCount, 0);
   EXPECT_EQ(ZE_RESULT_SUCCESS, zeDriverGet(&pDriverGetCount, nullptr));
   EXPECT_GT(pDriverGetCount, 0);
+}
+
+TEST(
+  LoaderInit,
+  GivenLevelZeroLoaderPresentWithMultipleDriversMissingInitDriversWhenCallingZeInitDriversThenExpectSuccessForZeInit) {
+
+  uint32_t pInitDriversCount = 0;
+  uint32_t pDriverGetCount = 0;
+  ze_init_driver_type_desc_t desc = {ZE_STRUCTURE_TYPE_INIT_DRIVER_TYPE_DESC};
+  desc.flags = UINT32_MAX;
+  desc.pNext = nullptr;
+  putenv_safe( const_cast<char *>( "ZEL_TEST_MISSING_API=zeInitDrivers" ) );
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zeInit(0));
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zeDriverGet(&pDriverGetCount, nullptr));
+  EXPECT_GT(pDriverGetCount, 0);
+  EXPECT_EQ(ZE_RESULT_ERROR_UNINITIALIZED, zeInitDrivers(&pInitDriversCount, nullptr, &desc));
+  EXPECT_EQ(pInitDriversCount, 0);
+}
+
+TEST(
+  LoaderInit,
+  GivenLevelZeroLoaderPresentWithMultipleDriversMissingInitDriversInOneDriverWhenCallingZeInitDriversThenExpectSuccessForZeInitDrivers) {
+
+  uint32_t pInitDriversCount = 0;
+  ze_init_driver_type_desc_t desc = {ZE_STRUCTURE_TYPE_INIT_DRIVER_TYPE_DESC};
+  desc.flags = UINT32_MAX;
+  desc.pNext = nullptr;
+  putenv_safe( const_cast<char *>( "ZEL_TEST_MISSING_API_DRIVER_ID=zeInitDrivers:1" ) );
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zeInitDrivers(&pInitDriversCount, nullptr, &desc));
+  EXPECT_GT(pInitDriversCount, 0);
+}
+
+TEST(
+  LoaderInit,
+  GivenLevelZeroLoaderPresentWithMultipleDriversMissingInitDriversWhenCallingZeInitDriversThenExpectSuccessForZeInitWithDriverGetAfterInitDrivers) {
+
+  uint32_t pInitDriversCount = 0;
+  uint32_t pDriverGetCount = 0;
+  ze_init_driver_type_desc_t desc = {ZE_STRUCTURE_TYPE_INIT_DRIVER_TYPE_DESC};
+  desc.flags = UINT32_MAX;
+  desc.pNext = nullptr;
+  putenv_safe( const_cast<char *>( "ZEL_TEST_MISSING_API=zeInitDrivers" ) );
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zeInit(0));
+  EXPECT_EQ(ZE_RESULT_ERROR_UNINITIALIZED, zeInitDrivers(&pInitDriversCount, nullptr, &desc));
+  EXPECT_EQ(pInitDriversCount, 0);
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zeDriverGet(&pDriverGetCount, nullptr));
+  EXPECT_GT(pDriverGetCount, 0);
+}
+
+TEST(
+  LoaderInit,
+  GivenLevelZeroLoaderPresentWithMultipleDriversWhenCallingZeInitDriversThenExpectSuccessForZeInit) {
+
+  uint32_t pInitDriversCount = 0;
+  uint32_t pDriverGetCount = 0;
+  ze_init_driver_type_desc_t desc = {ZE_STRUCTURE_TYPE_INIT_DRIVER_TYPE_DESC};
+  desc.flags = UINT32_MAX;
+  desc.pNext = nullptr;
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zeInitDrivers(&pInitDriversCount, nullptr, &desc));
+  EXPECT_GT(pInitDriversCount, 0);
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zeInit(0));
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zeDriverGet(&pDriverGetCount, nullptr));
+  EXPECT_GT(pDriverGetCount, 0);
+}
+
+TEST(
+  LoaderInit,
+  GivenLevelZeroLoaderPresentWithMultipleDriversWhenCallingZeInitThenZeInitDriversThenExpectSuccessForZeInitWithDriverGetAfterInitDrivers) {
+
+  uint32_t pInitDriversCount = 0;
+  uint32_t pDriverGetCount = 0;
+  ze_init_driver_type_desc_t desc = {ZE_STRUCTURE_TYPE_INIT_DRIVER_TYPE_DESC};
+  desc.flags = UINT32_MAX;
+  desc.pNext = nullptr;
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zeInit(0));
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zeInitDrivers(&pInitDriversCount, nullptr, &desc));
+  EXPECT_GT(pInitDriversCount, 0);
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zeDriverGet(&pDriverGetCount, nullptr));
+  EXPECT_GT(pDriverGetCount, 0);
+}
+
+TEST(
+  LoaderInit,
+  GivenLevelZeroLoaderPresentWithMultipleDriversWhenCallingZesInitThenExpectSuccessForZesDriverGet) {
+
+  uint32_t pDriverGetCount = 0;
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zesInit(0));
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zesDriverGet(&pDriverGetCount, nullptr));
+  EXPECT_GT(pDriverGetCount, 0);
+}
+
+TEST(
+  LoaderInit,
+  GivenLevelZeroLoaderPresentWithMultipleDriversWhenCallingZesInitThenZeInitDriversExpectSuccessForZesDriverGetAndZeInitDrivers) {
+
+  uint32_t pInitDriversCount = 0;
+  uint32_t pDriverGetCount = 0;
+  ze_init_driver_type_desc_t desc = {ZE_STRUCTURE_TYPE_INIT_DRIVER_TYPE_DESC};
+  desc.flags = UINT32_MAX;
+  desc.pNext = nullptr;
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zesInit(0));
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zeInitDrivers(&pInitDriversCount, nullptr, &desc));
+  EXPECT_GT(pInitDriversCount, 0);
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zesDriverGet(&pDriverGetCount, nullptr));
+  EXPECT_GT(pDriverGetCount, 0);
+}
+
+TEST(
+  LoaderTearDown,
+  GivenLoaderNotInDestructionStateWhenCallingzelCheckIsLoaderInTearDownThenFalseIsReturned) {
+
+  EXPECT_EQ(ZE_RESULT_SUCCESS, zeInit(0));
+  EXPECT_FALSE(zelCheckIsLoaderInTearDown());
 }
 
 } // namespace
