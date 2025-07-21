@@ -79,23 +79,26 @@ namespace loader
         %elif re.match(r"\w+DriverGet$", th.make_func_name(n, tags, obj)) or re.match(r"\w+InitDrivers$", th.make_func_name(n, tags, obj)):
         uint32_t total_driver_handle_count = 0;
 
-        if (!loader::context->sortingInProgress.exchange(true) && !loader::context->instrumentationEnabled) {
-            %if namespace != "zes":
-            %if not re.match(r"\w+InitDrivers$", th.make_func_name(n, tags, obj)):
-            std::call_once(loader::context->coreDriverSortOnce, []() {
-                loader::context->driverSorting(&loader::context->zeDrivers, nullptr, false);
-            });
-            %else:
-            std::call_once(loader::context->coreDriverSortOnce, [desc]() {
-                loader::context->driverSorting(&loader::context->zeDrivers, desc, false);
-            });
-            %endif
-            %else:
-            std::call_once(loader::context->sysmanDriverSortOnce, []() {
-                loader::context->driverSorting(loader::context->sysmanInstanceDrivers, nullptr, true);
-            });
-            %endif
-            loader::context->sortingInProgress.store(false);
+        {
+            std::lock_guard<std::mutex> lock(loader::context->sortMutex);
+            if (!loader::context->sortingInProgress.exchange(true) && !loader::context->instrumentationEnabled) {
+                %if namespace != "zes":
+                %if not re.match(r"\w+InitDrivers$", th.make_func_name(n, tags, obj)):
+                std::call_once(loader::context->coreDriverSortOnce, []() {
+                    loader::context->driverSorting(&loader::context->zeDrivers, nullptr, false);
+                });
+                %else:
+                std::call_once(loader::context->coreDriverSortOnce, [desc]() {
+                    loader::context->driverSorting(&loader::context->zeDrivers, desc, false);
+                });
+                %endif
+                %else:
+                std::call_once(loader::context->sysmanDriverSortOnce, []() {
+                    loader::context->driverSorting(loader::context->sysmanInstanceDrivers, nullptr, true);
+                });
+                %endif
+                loader::context->sortingInProgress.store(false);
+            }
         }
 
         %if namespace != "zes":
@@ -410,9 +413,10 @@ ${tbl['export']['name']}(
         %endif
         %if tbl['experimental'] is False: #//Experimental Tables may not be implemented in driver
         auto getTableResult = getTable( version, &drv.dditable.${n}.${tbl['name']});
-        if(getTableResult == ZE_RESULT_SUCCESS) 
+        if(getTableResult == ZE_RESULT_SUCCESS) {
             atLeastOneDriverValid = true;
-        else
+            loader::context->configured_version = version;
+        } else
             drv.initStatus = getTableResult;
         %if namespace != "zes":
         %if tbl['name'] == "Global":
@@ -443,15 +447,17 @@ ${tbl['export']['name']}(
         {
             // return pointers to loader's DDIs
             %for obj in tbl['functions']:
+            if (version >= ${th.get_version(obj)}) {
             %if 'condition' in obj:
         #if ${th.subt(n, tags, obj['condition'])}
             %endif
-            pDdiTable->${th.append_ws(th.make_pfn_name(n, tags, obj), 43)} = loader::${th.make_func_name(n, tags, obj)};
+                pDdiTable->${th.append_ws(th.make_pfn_name(n, tags, obj), 43)} = loader::${th.make_func_name(n, tags, obj)};
             %if 'condition' in obj:
         #else
-            pDdiTable->${th.append_ws(th.make_pfn_name(n, tags, obj), 43)} = nullptr;
+                pDdiTable->${th.append_ws(th.make_pfn_name(n, tags, obj), 43)} = nullptr;
         #endif
             %endif
+            }
             %endfor
         }
         else

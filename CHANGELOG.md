@@ -1,5 +1,22 @@
 # Level zero loader changelog
 
+## v1.22.5
+* cmake/msvc: unify CRT model and add VTune-safe flags for RelWithDebInfo
+* Init certification checker in the Validation Layer
+* Fix CI to run on release branches
+## v1.22.4
+* Block all calls to get until after init has completed to avoid race during sorting.
+## v1.22.3
+* Fix sysman-only initialization to block loader context retrieval when versions are incompatible
+* Add ability to register a TeardownCallback to notify release of L0 resources
+## v1.22.2
+* Fix zesInit to init the correct requested api version
+## v1.22.1
+* fix ddi compatibility to avoid assigning values which don't exist
+* Fix static loader to request current version as the latest APIs
+* Update to support v1.13.1 of the Level Zero Spec
+* Add testing stdout from zeInitDrivers in CI
+* Only Enable Teardown thread on windows and remove debug on success
 ## v1.21.9
 * Fix init checks when sorting legacy drivers
 * Fix MSVC Link optimization flags
