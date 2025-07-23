@@ -569,8 +569,8 @@ namespace validation_layer
                                                         ///< than the `count` member of ::zet_debug_regset_properties_t for the
                                                         ///< type
         uint32_t count,                                 ///< [in] the number of registers to read; start+count must be less than or
-                                                        ///< equal to the `count` member of ::zet_debug_register_group_properties_t
-                                                        ///< for the type
+                                                        ///< equal to the `count` member of ::zet_debug_regset_properties_t for the
+                                                        ///< type
         void* pRegisterValues                           ///< [in,out][optional][range(0, count)] buffer of register values
         )
     {
@@ -619,8 +619,8 @@ namespace validation_layer
                                                         ///< than the `count` member of ::zet_debug_regset_properties_t for the
                                                         ///< type
         uint32_t count,                                 ///< [in] the number of registers to write; start+count must be less than
-                                                        ///< or equal to the `count` member of
-                                                        ///< ::zet_debug_register_group_properties_t for the type
+                                                        ///< or equal to the `count` member of ::zet_debug_regset_properties_t for
+                                                        ///< the type
         void* pRegisterValues                           ///< [in,out][optional][range(0, count)] buffer of register values
         )
     {
@@ -2343,6 +2343,133 @@ namespace validation_layer
     }
 
     ///////////////////////////////////////////////////////////////////////////////
+    /// @brief Intercept function for zetCommandListAppendMarkerExp
+    __zedlllocal ze_result_t ZE_APICALL
+    zetCommandListAppendMarkerExp(
+        zet_command_list_handle_t hCommandList,         ///< [in] handle to the command list
+        zet_metric_group_handle_t hMetricGroup,         ///< [in] handle to the marker metric group.
+                                                        ///< ::zet_metric_group_type_exp_flags_t could be used to check whether
+                                                        ///< marker is supoported by the metric group.
+        uint32_t value                                  ///< [in] marker value
+        )
+    {
+        context.logger->log_trace("zetCommandListAppendMarkerExp(hCommandList, hMetricGroup, value)");
+
+        auto pfnAppendMarkerExp = context.zetDdiTable.CommandListExp.pfnAppendMarkerExp;
+
+        if( nullptr == pfnAppendMarkerExp )
+            return logAndPropagateResult("zetCommandListAppendMarkerExp", ZE_RESULT_ERROR_UNSUPPORTED_FEATURE);
+
+        auto numValHandlers = context.validationHandlers.size();
+        for (size_t i = 0; i < numValHandlers; i++) {
+            auto result = context.validationHandlers[i]->zetValidation->zetCommandListAppendMarkerExpPrologue( hCommandList, hMetricGroup, value );
+            if(result!=ZE_RESULT_SUCCESS) return logAndPropagateResult("zetCommandListAppendMarkerExp", result);
+        }
+
+
+        if( context.enableThreadingValidation ){ 
+            //Unimplemented
+        }
+
+        
+        if(context.enableHandleLifetime ){
+            auto result = context.handleLifetime->zetHandleLifetime.zetCommandListAppendMarkerExpPrologue( hCommandList, hMetricGroup, value );
+            if(result!=ZE_RESULT_SUCCESS) return logAndPropagateResult("zetCommandListAppendMarkerExp", result);
+        }
+
+        auto driver_result = pfnAppendMarkerExp( hCommandList, hMetricGroup, value );
+
+        for (size_t i = 0; i < numValHandlers; i++) {
+            auto result = context.validationHandlers[i]->zetValidation->zetCommandListAppendMarkerExpEpilogue( hCommandList, hMetricGroup, value ,driver_result);
+            if(result!=ZE_RESULT_SUCCESS) return logAndPropagateResult("zetCommandListAppendMarkerExp", result);
+        }
+
+        return logAndPropagateResult("zetCommandListAppendMarkerExp", driver_result);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////
+    /// @brief Intercept function for zetDeviceEnableMetricsExp
+    __zedlllocal ze_result_t ZE_APICALL
+    zetDeviceEnableMetricsExp(
+        zet_device_handle_t hDevice                     ///< [in] handle of the device where metrics collection has to be enabled.
+        )
+    {
+        context.logger->log_trace("zetDeviceEnableMetricsExp(hDevice)");
+
+        auto pfnEnableMetricsExp = context.zetDdiTable.DeviceExp.pfnEnableMetricsExp;
+
+        if( nullptr == pfnEnableMetricsExp )
+            return logAndPropagateResult("zetDeviceEnableMetricsExp", ZE_RESULT_ERROR_UNSUPPORTED_FEATURE);
+
+        auto numValHandlers = context.validationHandlers.size();
+        for (size_t i = 0; i < numValHandlers; i++) {
+            auto result = context.validationHandlers[i]->zetValidation->zetDeviceEnableMetricsExpPrologue( hDevice );
+            if(result!=ZE_RESULT_SUCCESS) return logAndPropagateResult("zetDeviceEnableMetricsExp", result);
+        }
+
+
+        if( context.enableThreadingValidation ){ 
+            //Unimplemented
+        }
+
+        
+        if(context.enableHandleLifetime ){
+            auto result = context.handleLifetime->zetHandleLifetime.zetDeviceEnableMetricsExpPrologue( hDevice );
+            if(result!=ZE_RESULT_SUCCESS) return logAndPropagateResult("zetDeviceEnableMetricsExp", result);
+        }
+
+        auto driver_result = pfnEnableMetricsExp( hDevice );
+
+        for (size_t i = 0; i < numValHandlers; i++) {
+            auto result = context.validationHandlers[i]->zetValidation->zetDeviceEnableMetricsExpEpilogue( hDevice ,driver_result);
+            if(result!=ZE_RESULT_SUCCESS) return logAndPropagateResult("zetDeviceEnableMetricsExp", result);
+        }
+
+        return logAndPropagateResult("zetDeviceEnableMetricsExp", driver_result);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////
+    /// @brief Intercept function for zetDeviceDisableMetricsExp
+    __zedlllocal ze_result_t ZE_APICALL
+    zetDeviceDisableMetricsExp(
+        zet_device_handle_t hDevice                     ///< [in] handle of the device where metrics collection has to be disabled
+        )
+    {
+        context.logger->log_trace("zetDeviceDisableMetricsExp(hDevice)");
+
+        auto pfnDisableMetricsExp = context.zetDdiTable.DeviceExp.pfnDisableMetricsExp;
+
+        if( nullptr == pfnDisableMetricsExp )
+            return logAndPropagateResult("zetDeviceDisableMetricsExp", ZE_RESULT_ERROR_UNSUPPORTED_FEATURE);
+
+        auto numValHandlers = context.validationHandlers.size();
+        for (size_t i = 0; i < numValHandlers; i++) {
+            auto result = context.validationHandlers[i]->zetValidation->zetDeviceDisableMetricsExpPrologue( hDevice );
+            if(result!=ZE_RESULT_SUCCESS) return logAndPropagateResult("zetDeviceDisableMetricsExp", result);
+        }
+
+
+        if( context.enableThreadingValidation ){ 
+            //Unimplemented
+        }
+
+        
+        if(context.enableHandleLifetime ){
+            auto result = context.handleLifetime->zetHandleLifetime.zetDeviceDisableMetricsExpPrologue( hDevice );
+            if(result!=ZE_RESULT_SUCCESS) return logAndPropagateResult("zetDeviceDisableMetricsExp", result);
+        }
+
+        auto driver_result = pfnDisableMetricsExp( hDevice );
+
+        for (size_t i = 0; i < numValHandlers; i++) {
+            auto result = context.validationHandlers[i]->zetValidation->zetDeviceDisableMetricsExpEpilogue( hDevice ,driver_result);
+            if(result!=ZE_RESULT_SUCCESS) return logAndPropagateResult("zetDeviceDisableMetricsExp", result);
+        }
+
+        return logAndPropagateResult("zetDeviceDisableMetricsExp", driver_result);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////
     /// @brief Intercept function for zetMetricGroupCalculateMultipleMetricValuesExp
     __zedlllocal ze_result_t ZE_APICALL
     zetMetricGroupCalculateMultipleMetricValuesExp(
@@ -3283,21 +3410,23 @@ zetGetMetricDecoderExpProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnCreateExp                                = pDdiTable->pfnCreateExp;
-    pDdiTable->pfnCreateExp                              = validation_layer::zetMetricDecoderCreateExp;
-
-    dditable.pfnDestroyExp                               = pDdiTable->pfnDestroyExp;
-    pDdiTable->pfnDestroyExp                             = validation_layer::zetMetricDecoderDestroyExp;
-
-    dditable.pfnGetDecodableMetricsExp                   = pDdiTable->pfnGetDecodableMetricsExp;
-    pDdiTable->pfnGetDecodableMetricsExp                 = validation_layer::zetMetricDecoderGetDecodableMetricsExp;
-
+    if (version >= ZE_API_VERSION_1_10) {
+        dditable.pfnCreateExp                                = pDdiTable->pfnCreateExp;
+        pDdiTable->pfnCreateExp                              = validation_layer::zetMetricDecoderCreateExp;
+    }
+    if (version >= ZE_API_VERSION_1_10) {
+        dditable.pfnDestroyExp                               = pDdiTable->pfnDestroyExp;
+        pDdiTable->pfnDestroyExp                             = validation_layer::zetMetricDecoderDestroyExp;
+    }
+    if (version >= ZE_API_VERSION_1_10) {
+        dditable.pfnGetDecodableMetricsExp                   = pDdiTable->pfnGetDecodableMetricsExp;
+        pDdiTable->pfnGetDecodableMetricsExp                 = validation_layer::zetMetricDecoderGetDecodableMetricsExp;
+    }
     return result;
 }
 
@@ -3320,24 +3449,27 @@ zetGetMetricProgrammableExpProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnGetExp                                   = pDdiTable->pfnGetExp;
-    pDdiTable->pfnGetExp                                 = validation_layer::zetMetricProgrammableGetExp;
-
-    dditable.pfnGetPropertiesExp                         = pDdiTable->pfnGetPropertiesExp;
-    pDdiTable->pfnGetPropertiesExp                       = validation_layer::zetMetricProgrammableGetPropertiesExp;
-
-    dditable.pfnGetParamInfoExp                          = pDdiTable->pfnGetParamInfoExp;
-    pDdiTable->pfnGetParamInfoExp                        = validation_layer::zetMetricProgrammableGetParamInfoExp;
-
-    dditable.pfnGetParamValueInfoExp                     = pDdiTable->pfnGetParamValueInfoExp;
-    pDdiTable->pfnGetParamValueInfoExp                   = validation_layer::zetMetricProgrammableGetParamValueInfoExp;
-
+    if (version >= ZE_API_VERSION_1_9) {
+        dditable.pfnGetExp                                   = pDdiTable->pfnGetExp;
+        pDdiTable->pfnGetExp                                 = validation_layer::zetMetricProgrammableGetExp;
+    }
+    if (version >= ZE_API_VERSION_1_9) {
+        dditable.pfnGetPropertiesExp                         = pDdiTable->pfnGetPropertiesExp;
+        pDdiTable->pfnGetPropertiesExp                       = validation_layer::zetMetricProgrammableGetPropertiesExp;
+    }
+    if (version >= ZE_API_VERSION_1_9) {
+        dditable.pfnGetParamInfoExp                          = pDdiTable->pfnGetParamInfoExp;
+        pDdiTable->pfnGetParamInfoExp                        = validation_layer::zetMetricProgrammableGetParamInfoExp;
+    }
+    if (version >= ZE_API_VERSION_1_9) {
+        dditable.pfnGetParamValueInfoExp                     = pDdiTable->pfnGetParamValueInfoExp;
+        pDdiTable->pfnGetParamValueInfoExp                   = validation_layer::zetMetricProgrammableGetParamValueInfoExp;
+    }
     return result;
 }
 
@@ -3360,30 +3492,35 @@ zetGetMetricTracerExpProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnCreateExp                                = pDdiTable->pfnCreateExp;
-    pDdiTable->pfnCreateExp                              = validation_layer::zetMetricTracerCreateExp;
-
-    dditable.pfnDestroyExp                               = pDdiTable->pfnDestroyExp;
-    pDdiTable->pfnDestroyExp                             = validation_layer::zetMetricTracerDestroyExp;
-
-    dditable.pfnEnableExp                                = pDdiTable->pfnEnableExp;
-    pDdiTable->pfnEnableExp                              = validation_layer::zetMetricTracerEnableExp;
-
-    dditable.pfnDisableExp                               = pDdiTable->pfnDisableExp;
-    pDdiTable->pfnDisableExp                             = validation_layer::zetMetricTracerDisableExp;
-
-    dditable.pfnReadDataExp                              = pDdiTable->pfnReadDataExp;
-    pDdiTable->pfnReadDataExp                            = validation_layer::zetMetricTracerReadDataExp;
-
-    dditable.pfnDecodeExp                                = pDdiTable->pfnDecodeExp;
-    pDdiTable->pfnDecodeExp                              = validation_layer::zetMetricTracerDecodeExp;
-
+    if (version >= ZE_API_VERSION_1_10) {
+        dditable.pfnCreateExp                                = pDdiTable->pfnCreateExp;
+        pDdiTable->pfnCreateExp                              = validation_layer::zetMetricTracerCreateExp;
+    }
+    if (version >= ZE_API_VERSION_1_10) {
+        dditable.pfnDestroyExp                               = pDdiTable->pfnDestroyExp;
+        pDdiTable->pfnDestroyExp                             = validation_layer::zetMetricTracerDestroyExp;
+    }
+    if (version >= ZE_API_VERSION_1_10) {
+        dditable.pfnEnableExp                                = pDdiTable->pfnEnableExp;
+        pDdiTable->pfnEnableExp                              = validation_layer::zetMetricTracerEnableExp;
+    }
+    if (version >= ZE_API_VERSION_1_10) {
+        dditable.pfnDisableExp                               = pDdiTable->pfnDisableExp;
+        pDdiTable->pfnDisableExp                             = validation_layer::zetMetricTracerDisableExp;
+    }
+    if (version >= ZE_API_VERSION_1_10) {
+        dditable.pfnReadDataExp                              = pDdiTable->pfnReadDataExp;
+        pDdiTable->pfnReadDataExp                            = validation_layer::zetMetricTracerReadDataExp;
+    }
+    if (version >= ZE_API_VERSION_1_10) {
+        dditable.pfnDecodeExp                                = pDdiTable->pfnDecodeExp;
+        pDdiTable->pfnDecodeExp                              = validation_layer::zetMetricTracerDecodeExp;
+    }
     return result;
 }
 
@@ -3406,15 +3543,15 @@ zetGetDeviceProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnGetDebugProperties                       = pDdiTable->pfnGetDebugProperties;
-    pDdiTable->pfnGetDebugProperties                     = validation_layer::zetDeviceGetDebugProperties;
-
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnGetDebugProperties                       = pDdiTable->pfnGetDebugProperties;
+        pDdiTable->pfnGetDebugProperties                     = validation_layer::zetDeviceGetDebugProperties;
+    }
     return result;
 }
 
@@ -3437,18 +3574,27 @@ zetGetDeviceExpProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnGetConcurrentMetricGroupsExp             = pDdiTable->pfnGetConcurrentMetricGroupsExp;
-    pDdiTable->pfnGetConcurrentMetricGroupsExp           = validation_layer::zetDeviceGetConcurrentMetricGroupsExp;
-
-    dditable.pfnCreateMetricGroupsFromMetricsExp         = pDdiTable->pfnCreateMetricGroupsFromMetricsExp;
-    pDdiTable->pfnCreateMetricGroupsFromMetricsExp       = validation_layer::zetDeviceCreateMetricGroupsFromMetricsExp;
-
+    if (version >= ZE_API_VERSION_1_10) {
+        dditable.pfnGetConcurrentMetricGroupsExp             = pDdiTable->pfnGetConcurrentMetricGroupsExp;
+        pDdiTable->pfnGetConcurrentMetricGroupsExp           = validation_layer::zetDeviceGetConcurrentMetricGroupsExp;
+    }
+    if (version >= ZE_API_VERSION_1_10) {
+        dditable.pfnCreateMetricGroupsFromMetricsExp         = pDdiTable->pfnCreateMetricGroupsFromMetricsExp;
+        pDdiTable->pfnCreateMetricGroupsFromMetricsExp       = validation_layer::zetDeviceCreateMetricGroupsFromMetricsExp;
+    }
+    if (version >= ZE_API_VERSION_1_13) {
+        dditable.pfnEnableMetricsExp                         = pDdiTable->pfnEnableMetricsExp;
+        pDdiTable->pfnEnableMetricsExp                       = validation_layer::zetDeviceEnableMetricsExp;
+    }
+    if (version >= ZE_API_VERSION_1_13) {
+        dditable.pfnDisableMetricsExp                        = pDdiTable->pfnDisableMetricsExp;
+        pDdiTable->pfnDisableMetricsExp                      = validation_layer::zetDeviceDisableMetricsExp;
+    }
     return result;
 }
 
@@ -3471,15 +3617,15 @@ zetGetContextProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnActivateMetricGroups                     = pDdiTable->pfnActivateMetricGroups;
-    pDdiTable->pfnActivateMetricGroups                   = validation_layer::zetContextActivateMetricGroups;
-
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnActivateMetricGroups                     = pDdiTable->pfnActivateMetricGroups;
+        pDdiTable->pfnActivateMetricGroups                   = validation_layer::zetContextActivateMetricGroups;
+    }
     return result;
 }
 
@@ -3502,24 +3648,58 @@ zetGetCommandListProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnAppendMetricStreamerMarker               = pDdiTable->pfnAppendMetricStreamerMarker;
-    pDdiTable->pfnAppendMetricStreamerMarker             = validation_layer::zetCommandListAppendMetricStreamerMarker;
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnAppendMetricStreamerMarker               = pDdiTable->pfnAppendMetricStreamerMarker;
+        pDdiTable->pfnAppendMetricStreamerMarker             = validation_layer::zetCommandListAppendMetricStreamerMarker;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnAppendMetricQueryBegin                   = pDdiTable->pfnAppendMetricQueryBegin;
+        pDdiTable->pfnAppendMetricQueryBegin                 = validation_layer::zetCommandListAppendMetricQueryBegin;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnAppendMetricQueryEnd                     = pDdiTable->pfnAppendMetricQueryEnd;
+        pDdiTable->pfnAppendMetricQueryEnd                   = validation_layer::zetCommandListAppendMetricQueryEnd;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnAppendMetricMemoryBarrier                = pDdiTable->pfnAppendMetricMemoryBarrier;
+        pDdiTable->pfnAppendMetricMemoryBarrier              = validation_layer::zetCommandListAppendMetricMemoryBarrier;
+    }
+    return result;
+}
 
-    dditable.pfnAppendMetricQueryBegin                   = pDdiTable->pfnAppendMetricQueryBegin;
-    pDdiTable->pfnAppendMetricQueryBegin                 = validation_layer::zetCommandListAppendMetricQueryBegin;
+///////////////////////////////////////////////////////////////////////////////
+/// @brief Exported function for filling application's CommandListExp table
+///        with current process' addresses
+///
+/// @returns
+///     - ::ZE_RESULT_SUCCESS
+///     - ::ZE_RESULT_ERROR_INVALID_NULL_POINTER
+///     - ::ZE_RESULT_ERROR_UNSUPPORTED_VERSION
+ZE_DLLEXPORT ze_result_t ZE_APICALL
+zetGetCommandListExpProcAddrTable(
+    ze_api_version_t version,                       ///< [in] API version requested
+    zet_command_list_exp_dditable_t* pDdiTable      ///< [in,out] pointer to table of DDI function pointers
+    )
+{
+    auto& dditable = validation_layer::context.zetDdiTable.CommandListExp;
 
-    dditable.pfnAppendMetricQueryEnd                     = pDdiTable->pfnAppendMetricQueryEnd;
-    pDdiTable->pfnAppendMetricQueryEnd                   = validation_layer::zetCommandListAppendMetricQueryEnd;
+    if( nullptr == pDdiTable )
+        return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    dditable.pfnAppendMetricMemoryBarrier                = pDdiTable->pfnAppendMetricMemoryBarrier;
-    pDdiTable->pfnAppendMetricMemoryBarrier              = validation_layer::zetCommandListAppendMetricMemoryBarrier;
+    if (validation_layer::context.version < version)
+        return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
+    ze_result_t result = ZE_RESULT_SUCCESS;
+
+    if (version >= ZE_API_VERSION_1_13) {
+        dditable.pfnAppendMarkerExp                          = pDdiTable->pfnAppendMarkerExp;
+        pDdiTable->pfnAppendMarkerExp                        = validation_layer::zetCommandListAppendMarkerExp;
+    }
     return result;
 }
 
@@ -3542,15 +3722,15 @@ zetGetKernelProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnGetProfileInfo                           = pDdiTable->pfnGetProfileInfo;
-    pDdiTable->pfnGetProfileInfo                         = validation_layer::zetKernelGetProfileInfo;
-
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnGetProfileInfo                           = pDdiTable->pfnGetProfileInfo;
+        pDdiTable->pfnGetProfileInfo                         = validation_layer::zetKernelGetProfileInfo;
+    }
     return result;
 }
 
@@ -3573,15 +3753,15 @@ zetGetModuleProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnGetDebugInfo                             = pDdiTable->pfnGetDebugInfo;
-    pDdiTable->pfnGetDebugInfo                           = validation_layer::zetModuleGetDebugInfo;
-
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnGetDebugInfo                             = pDdiTable->pfnGetDebugInfo;
+        pDdiTable->pfnGetDebugInfo                           = validation_layer::zetModuleGetDebugInfo;
+    }
     return result;
 }
 
@@ -3604,48 +3784,59 @@ zetGetDebugProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnAttach                                   = pDdiTable->pfnAttach;
-    pDdiTable->pfnAttach                                 = validation_layer::zetDebugAttach;
-
-    dditable.pfnDetach                                   = pDdiTable->pfnDetach;
-    pDdiTable->pfnDetach                                 = validation_layer::zetDebugDetach;
-
-    dditable.pfnReadEvent                                = pDdiTable->pfnReadEvent;
-    pDdiTable->pfnReadEvent                              = validation_layer::zetDebugReadEvent;
-
-    dditable.pfnAcknowledgeEvent                         = pDdiTable->pfnAcknowledgeEvent;
-    pDdiTable->pfnAcknowledgeEvent                       = validation_layer::zetDebugAcknowledgeEvent;
-
-    dditable.pfnInterrupt                                = pDdiTable->pfnInterrupt;
-    pDdiTable->pfnInterrupt                              = validation_layer::zetDebugInterrupt;
-
-    dditable.pfnResume                                   = pDdiTable->pfnResume;
-    pDdiTable->pfnResume                                 = validation_layer::zetDebugResume;
-
-    dditable.pfnReadMemory                               = pDdiTable->pfnReadMemory;
-    pDdiTable->pfnReadMemory                             = validation_layer::zetDebugReadMemory;
-
-    dditable.pfnWriteMemory                              = pDdiTable->pfnWriteMemory;
-    pDdiTable->pfnWriteMemory                            = validation_layer::zetDebugWriteMemory;
-
-    dditable.pfnGetRegisterSetProperties                 = pDdiTable->pfnGetRegisterSetProperties;
-    pDdiTable->pfnGetRegisterSetProperties               = validation_layer::zetDebugGetRegisterSetProperties;
-
-    dditable.pfnReadRegisters                            = pDdiTable->pfnReadRegisters;
-    pDdiTable->pfnReadRegisters                          = validation_layer::zetDebugReadRegisters;
-
-    dditable.pfnWriteRegisters                           = pDdiTable->pfnWriteRegisters;
-    pDdiTable->pfnWriteRegisters                         = validation_layer::zetDebugWriteRegisters;
-
-    dditable.pfnGetThreadRegisterSetProperties           = pDdiTable->pfnGetThreadRegisterSetProperties;
-    pDdiTable->pfnGetThreadRegisterSetProperties         = validation_layer::zetDebugGetThreadRegisterSetProperties;
-
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnAttach                                   = pDdiTable->pfnAttach;
+        pDdiTable->pfnAttach                                 = validation_layer::zetDebugAttach;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnDetach                                   = pDdiTable->pfnDetach;
+        pDdiTable->pfnDetach                                 = validation_layer::zetDebugDetach;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnReadEvent                                = pDdiTable->pfnReadEvent;
+        pDdiTable->pfnReadEvent                              = validation_layer::zetDebugReadEvent;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnAcknowledgeEvent                         = pDdiTable->pfnAcknowledgeEvent;
+        pDdiTable->pfnAcknowledgeEvent                       = validation_layer::zetDebugAcknowledgeEvent;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnInterrupt                                = pDdiTable->pfnInterrupt;
+        pDdiTable->pfnInterrupt                              = validation_layer::zetDebugInterrupt;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnResume                                   = pDdiTable->pfnResume;
+        pDdiTable->pfnResume                                 = validation_layer::zetDebugResume;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnReadMemory                               = pDdiTable->pfnReadMemory;
+        pDdiTable->pfnReadMemory                             = validation_layer::zetDebugReadMemory;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnWriteMemory                              = pDdiTable->pfnWriteMemory;
+        pDdiTable->pfnWriteMemory                            = validation_layer::zetDebugWriteMemory;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnGetRegisterSetProperties                 = pDdiTable->pfnGetRegisterSetProperties;
+        pDdiTable->pfnGetRegisterSetProperties               = validation_layer::zetDebugGetRegisterSetProperties;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnReadRegisters                            = pDdiTable->pfnReadRegisters;
+        pDdiTable->pfnReadRegisters                          = validation_layer::zetDebugReadRegisters;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnWriteRegisters                           = pDdiTable->pfnWriteRegisters;
+        pDdiTable->pfnWriteRegisters                         = validation_layer::zetDebugWriteRegisters;
+    }
+    if (version >= ZE_API_VERSION_1_5) {
+        dditable.pfnGetThreadRegisterSetProperties           = pDdiTable->pfnGetThreadRegisterSetProperties;
+        pDdiTable->pfnGetThreadRegisterSetProperties         = validation_layer::zetDebugGetThreadRegisterSetProperties;
+    }
     return result;
 }
 
@@ -3668,18 +3859,19 @@ zetGetMetricProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnGet                                      = pDdiTable->pfnGet;
-    pDdiTable->pfnGet                                    = validation_layer::zetMetricGet;
-
-    dditable.pfnGetProperties                            = pDdiTable->pfnGetProperties;
-    pDdiTable->pfnGetProperties                          = validation_layer::zetMetricGetProperties;
-
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnGet                                      = pDdiTable->pfnGet;
+        pDdiTable->pfnGet                                    = validation_layer::zetMetricGet;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnGetProperties                            = pDdiTable->pfnGetProperties;
+        pDdiTable->pfnGetProperties                          = validation_layer::zetMetricGetProperties;
+    }
     return result;
 }
 
@@ -3702,21 +3894,23 @@ zetGetMetricExpProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnCreateFromProgrammableExp2               = pDdiTable->pfnCreateFromProgrammableExp2;
-    pDdiTable->pfnCreateFromProgrammableExp2             = validation_layer::zetMetricCreateFromProgrammableExp2;
-
-    dditable.pfnCreateFromProgrammableExp                = pDdiTable->pfnCreateFromProgrammableExp;
-    pDdiTable->pfnCreateFromProgrammableExp              = validation_layer::zetMetricCreateFromProgrammableExp;
-
-    dditable.pfnDestroyExp                               = pDdiTable->pfnDestroyExp;
-    pDdiTable->pfnDestroyExp                             = validation_layer::zetMetricDestroyExp;
-
+    if (version >= ZE_API_VERSION_1_11) {
+        dditable.pfnCreateFromProgrammableExp2               = pDdiTable->pfnCreateFromProgrammableExp2;
+        pDdiTable->pfnCreateFromProgrammableExp2             = validation_layer::zetMetricCreateFromProgrammableExp2;
+    }
+    if (version >= ZE_API_VERSION_1_9) {
+        dditable.pfnCreateFromProgrammableExp                = pDdiTable->pfnCreateFromProgrammableExp;
+        pDdiTable->pfnCreateFromProgrammableExp              = validation_layer::zetMetricCreateFromProgrammableExp;
+    }
+    if (version >= ZE_API_VERSION_1_9) {
+        dditable.pfnDestroyExp                               = pDdiTable->pfnDestroyExp;
+        pDdiTable->pfnDestroyExp                             = validation_layer::zetMetricDestroyExp;
+    }
     return result;
 }
 
@@ -3739,21 +3933,23 @@ zetGetMetricGroupProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnGet                                      = pDdiTable->pfnGet;
-    pDdiTable->pfnGet                                    = validation_layer::zetMetricGroupGet;
-
-    dditable.pfnGetProperties                            = pDdiTable->pfnGetProperties;
-    pDdiTable->pfnGetProperties                          = validation_layer::zetMetricGroupGetProperties;
-
-    dditable.pfnCalculateMetricValues                    = pDdiTable->pfnCalculateMetricValues;
-    pDdiTable->pfnCalculateMetricValues                  = validation_layer::zetMetricGroupCalculateMetricValues;
-
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnGet                                      = pDdiTable->pfnGet;
+        pDdiTable->pfnGet                                    = validation_layer::zetMetricGroupGet;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnGetProperties                            = pDdiTable->pfnGetProperties;
+        pDdiTable->pfnGetProperties                          = validation_layer::zetMetricGroupGetProperties;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnCalculateMetricValues                    = pDdiTable->pfnCalculateMetricValues;
+        pDdiTable->pfnCalculateMetricValues                  = validation_layer::zetMetricGroupCalculateMetricValues;
+    }
     return result;
 }
 
@@ -3776,39 +3972,47 @@ zetGetMetricGroupExpProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnCalculateMultipleMetricValuesExp         = pDdiTable->pfnCalculateMultipleMetricValuesExp;
-    pDdiTable->pfnCalculateMultipleMetricValuesExp       = validation_layer::zetMetricGroupCalculateMultipleMetricValuesExp;
-
-    dditable.pfnGetGlobalTimestampsExp                   = pDdiTable->pfnGetGlobalTimestampsExp;
-    pDdiTable->pfnGetGlobalTimestampsExp                 = validation_layer::zetMetricGroupGetGlobalTimestampsExp;
-
-    dditable.pfnGetExportDataExp                         = pDdiTable->pfnGetExportDataExp;
-    pDdiTable->pfnGetExportDataExp                       = validation_layer::zetMetricGroupGetExportDataExp;
-
-    dditable.pfnCalculateMetricExportDataExp             = pDdiTable->pfnCalculateMetricExportDataExp;
-    pDdiTable->pfnCalculateMetricExportDataExp           = validation_layer::zetMetricGroupCalculateMetricExportDataExp;
-
-    dditable.pfnCreateExp                                = pDdiTable->pfnCreateExp;
-    pDdiTable->pfnCreateExp                              = validation_layer::zetMetricGroupCreateExp;
-
-    dditable.pfnAddMetricExp                             = pDdiTable->pfnAddMetricExp;
-    pDdiTable->pfnAddMetricExp                           = validation_layer::zetMetricGroupAddMetricExp;
-
-    dditable.pfnRemoveMetricExp                          = pDdiTable->pfnRemoveMetricExp;
-    pDdiTable->pfnRemoveMetricExp                        = validation_layer::zetMetricGroupRemoveMetricExp;
-
-    dditable.pfnCloseExp                                 = pDdiTable->pfnCloseExp;
-    pDdiTable->pfnCloseExp                               = validation_layer::zetMetricGroupCloseExp;
-
-    dditable.pfnDestroyExp                               = pDdiTable->pfnDestroyExp;
-    pDdiTable->pfnDestroyExp                             = validation_layer::zetMetricGroupDestroyExp;
-
+    if (version >= ZE_API_VERSION_1_2) {
+        dditable.pfnCalculateMultipleMetricValuesExp         = pDdiTable->pfnCalculateMultipleMetricValuesExp;
+        pDdiTable->pfnCalculateMultipleMetricValuesExp       = validation_layer::zetMetricGroupCalculateMultipleMetricValuesExp;
+    }
+    if (version >= ZE_API_VERSION_1_5) {
+        dditable.pfnGetGlobalTimestampsExp                   = pDdiTable->pfnGetGlobalTimestampsExp;
+        pDdiTable->pfnGetGlobalTimestampsExp                 = validation_layer::zetMetricGroupGetGlobalTimestampsExp;
+    }
+    if (version >= ZE_API_VERSION_1_6) {
+        dditable.pfnGetExportDataExp                         = pDdiTable->pfnGetExportDataExp;
+        pDdiTable->pfnGetExportDataExp                       = validation_layer::zetMetricGroupGetExportDataExp;
+    }
+    if (version >= ZE_API_VERSION_1_6) {
+        dditable.pfnCalculateMetricExportDataExp             = pDdiTable->pfnCalculateMetricExportDataExp;
+        pDdiTable->pfnCalculateMetricExportDataExp           = validation_layer::zetMetricGroupCalculateMetricExportDataExp;
+    }
+    if (version >= ZE_API_VERSION_1_9) {
+        dditable.pfnCreateExp                                = pDdiTable->pfnCreateExp;
+        pDdiTable->pfnCreateExp                              = validation_layer::zetMetricGroupCreateExp;
+    }
+    if (version >= ZE_API_VERSION_1_9) {
+        dditable.pfnAddMetricExp                             = pDdiTable->pfnAddMetricExp;
+        pDdiTable->pfnAddMetricExp                           = validation_layer::zetMetricGroupAddMetricExp;
+    }
+    if (version >= ZE_API_VERSION_1_9) {
+        dditable.pfnRemoveMetricExp                          = pDdiTable->pfnRemoveMetricExp;
+        pDdiTable->pfnRemoveMetricExp                        = validation_layer::zetMetricGroupRemoveMetricExp;
+    }
+    if (version >= ZE_API_VERSION_1_9) {
+        dditable.pfnCloseExp                                 = pDdiTable->pfnCloseExp;
+        pDdiTable->pfnCloseExp                               = validation_layer::zetMetricGroupCloseExp;
+    }
+    if (version >= ZE_API_VERSION_1_9) {
+        dditable.pfnDestroyExp                               = pDdiTable->pfnDestroyExp;
+        pDdiTable->pfnDestroyExp                             = validation_layer::zetMetricGroupDestroyExp;
+    }
     return result;
 }
 
@@ -3831,24 +4035,27 @@ zetGetMetricQueryProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnCreate                                   = pDdiTable->pfnCreate;
-    pDdiTable->pfnCreate                                 = validation_layer::zetMetricQueryCreate;
-
-    dditable.pfnDestroy                                  = pDdiTable->pfnDestroy;
-    pDdiTable->pfnDestroy                                = validation_layer::zetMetricQueryDestroy;
-
-    dditable.pfnReset                                    = pDdiTable->pfnReset;
-    pDdiTable->pfnReset                                  = validation_layer::zetMetricQueryReset;
-
-    dditable.pfnGetData                                  = pDdiTable->pfnGetData;
-    pDdiTable->pfnGetData                                = validation_layer::zetMetricQueryGetData;
-
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnCreate                                   = pDdiTable->pfnCreate;
+        pDdiTable->pfnCreate                                 = validation_layer::zetMetricQueryCreate;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnDestroy                                  = pDdiTable->pfnDestroy;
+        pDdiTable->pfnDestroy                                = validation_layer::zetMetricQueryDestroy;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnReset                                    = pDdiTable->pfnReset;
+        pDdiTable->pfnReset                                  = validation_layer::zetMetricQueryReset;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnGetData                                  = pDdiTable->pfnGetData;
+        pDdiTable->pfnGetData                                = validation_layer::zetMetricQueryGetData;
+    }
     return result;
 }
 
@@ -3871,18 +4078,19 @@ zetGetMetricQueryPoolProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnCreate                                   = pDdiTable->pfnCreate;
-    pDdiTable->pfnCreate                                 = validation_layer::zetMetricQueryPoolCreate;
-
-    dditable.pfnDestroy                                  = pDdiTable->pfnDestroy;
-    pDdiTable->pfnDestroy                                = validation_layer::zetMetricQueryPoolDestroy;
-
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnCreate                                   = pDdiTable->pfnCreate;
+        pDdiTable->pfnCreate                                 = validation_layer::zetMetricQueryPoolCreate;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnDestroy                                  = pDdiTable->pfnDestroy;
+        pDdiTable->pfnDestroy                                = validation_layer::zetMetricQueryPoolDestroy;
+    }
     return result;
 }
 
@@ -3905,21 +4113,23 @@ zetGetMetricStreamerProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnOpen                                     = pDdiTable->pfnOpen;
-    pDdiTable->pfnOpen                                   = validation_layer::zetMetricStreamerOpen;
-
-    dditable.pfnClose                                    = pDdiTable->pfnClose;
-    pDdiTable->pfnClose                                  = validation_layer::zetMetricStreamerClose;
-
-    dditable.pfnReadData                                 = pDdiTable->pfnReadData;
-    pDdiTable->pfnReadData                               = validation_layer::zetMetricStreamerReadData;
-
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnOpen                                     = pDdiTable->pfnOpen;
+        pDdiTable->pfnOpen                                   = validation_layer::zetMetricStreamerOpen;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnClose                                    = pDdiTable->pfnClose;
+        pDdiTable->pfnClose                                  = validation_layer::zetMetricStreamerClose;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnReadData                                 = pDdiTable->pfnReadData;
+        pDdiTable->pfnReadData                               = validation_layer::zetMetricStreamerReadData;
+    }
     return result;
 }
 
@@ -3942,27 +4152,31 @@ zetGetTracerExpProcAddrTable(
     if( nullptr == pDdiTable )
         return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
 
-    if (ZE_MAJOR_VERSION(validation_layer::context.version) != ZE_MAJOR_VERSION(version) ||
-        ZE_MINOR_VERSION(validation_layer::context.version) > ZE_MINOR_VERSION(version))
+    if (validation_layer::context.version < version)
         return ZE_RESULT_ERROR_UNSUPPORTED_VERSION;
 
     ze_result_t result = ZE_RESULT_SUCCESS;
 
-    dditable.pfnCreate                                   = pDdiTable->pfnCreate;
-    pDdiTable->pfnCreate                                 = validation_layer::zetTracerExpCreate;
-
-    dditable.pfnDestroy                                  = pDdiTable->pfnDestroy;
-    pDdiTable->pfnDestroy                                = validation_layer::zetTracerExpDestroy;
-
-    dditable.pfnSetPrologues                             = pDdiTable->pfnSetPrologues;
-    pDdiTable->pfnSetPrologues                           = validation_layer::zetTracerExpSetPrologues;
-
-    dditable.pfnSetEpilogues                             = pDdiTable->pfnSetEpilogues;
-    pDdiTable->pfnSetEpilogues                           = validation_layer::zetTracerExpSetEpilogues;
-
-    dditable.pfnSetEnabled                               = pDdiTable->pfnSetEnabled;
-    pDdiTable->pfnSetEnabled                             = validation_layer::zetTracerExpSetEnabled;
-
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnCreate                                   = pDdiTable->pfnCreate;
+        pDdiTable->pfnCreate                                 = validation_layer::zetTracerExpCreate;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnDestroy                                  = pDdiTable->pfnDestroy;
+        pDdiTable->pfnDestroy                                = validation_layer::zetTracerExpDestroy;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnSetPrologues                             = pDdiTable->pfnSetPrologues;
+        pDdiTable->pfnSetPrologues                           = validation_layer::zetTracerExpSetPrologues;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnSetEpilogues                             = pDdiTable->pfnSetEpilogues;
+        pDdiTable->pfnSetEpilogues                           = validation_layer::zetTracerExpSetEpilogues;
+    }
+    if (version >= ZE_API_VERSION_1_0) {
+        dditable.pfnSetEnabled                               = pDdiTable->pfnSetEnabled;
+        pDdiTable->pfnSetEnabled                             = validation_layer::zetTracerExpSetEnabled;
+    }
     return result;
 }
 
